@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  /* Định nghĩa màu sắc riêng cho V2T Bookstore */
+  --color-v2t-bg: #f5f4ef;
+  --color-v2t-green: #0a3622;
+  --color-v2t-green-hover: #062416;
+  --color-v2t-text: #1f2937;
+
+  /* Định nghĩa font chữ */
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+/* Set nền và màu chữ mặc định cho toàn web */
+@layer base {
+  body {
+    background-color: var(--color-v2t-bg);
+    color: var(--color-v2t-text);
+  }
+}
