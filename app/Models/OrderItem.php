@@ -18,4 +18,10 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Book::class);
     }
+
+    // Một chi tiết đơn hàng thuộc về một đơn hàng
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

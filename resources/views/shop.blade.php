@@ -298,7 +298,23 @@
                 @if($books->count() > 0)
                     <div class="v2t-book-grid">
                         @foreach($books as $index => $book)
-                            <div class="v2t-book-card">
+                            <div class="v2t-book-card" style="position: relative;">
+                                <!-- Nút Yêu thích (Wishlist Heart Icon) -->
+                                <form action="{{ route('wishlist.toggle', $book->id) }}" method="POST" style="position: absolute; top: 24px; right: 24px; z-index: 10; margin: 0;">
+                                    @csrf
+                                    <button type="submit" style="width: 32px; height: 32px; background: white; border: 1px solid #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; color: #ef4444; outline: none;" title="Yêu thích">
+                                        @if(in_array($book->id, session('wishlist', [])))
+                                            <svg style="width: 20px; height: 20px; fill: currentColor;" viewBox="0 0 24 24">
+                                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                            </svg>
+                                        @else
+                                            <svg style="width: 20px; height: 20px; fill: none; stroke: #9ca3af; stroke-width: 2;" viewBox="0 0 24 24">
+                                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                            </svg>
+                                        @endif
+                                    </button>
+                                </form>
+
                                 <div>
                                     <a href="{{ route('book.show', $book->id) }}" class="v2t-img-link">
                                         <img src="{{ $book->image_url }}" alt="{{ $book->title }}" onerror="this.onerror=null; this.src='https://placehold.co/400x600/1e3e36/ffffff?text=V2T+Bookstore';" class="v2t-book-img">

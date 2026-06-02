@@ -27,7 +27,10 @@
         </div>
         <div style="display: flex; gap: 10px;">
             <button style="padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-weight: 600; background: white;">{{ now()->format('d/m/Y') }}</button>
-            <button style="padding: 8px 16px; background: #1e3e36; color: white; border-radius: 8px; font-weight: 600; border: none; cursor: pointer;">Xuất dữ liệu</button>
+            <a href="{{ route('admin.export.orders') }}" style="padding: 8px 16px; background: #1e3e36; color: white; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Xuất dữ liệu (CSV)
+            </a>
         </div>
     </div>
 

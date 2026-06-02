@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\OrderItem;
+use Illuminate\Support\Facades\Auth;
 
 class BookController extends Controller
 {
@@ -68,6 +71,16 @@ class BookController extends Controller
                             ->take(4)
                             ->get();
 
-        return view('detail', compact('book', 'relatedBooks'));
+        // Kiểm tra user đã mua sách này chưa (để cho phép đánh giá)
+        $hasPurchased = false;
+        if (Auth::check()) {
+            $hasPurchased = OrderItem::where('book_id', $id)
+                ->whereHas('order', function ($q) {
+                    $q->where('user_id', Auth::id());
+                })
+                ->exists();
+        }
+
+        return view('detail', compact('book', 'relatedBooks', 'hasPurchased'));
     }
 }

@@ -14,6 +14,8 @@ Route::get('/', [HomeController::class, 'index']);
 Route::get('/home', [HomeController::class, 'index']);
 Route::get('/shop', [BookController::class, 'index'])->name('shop.index');
 Route::get('/book/{id}', [BookController::class, 'show'])->name('book.show');
+Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+Route::post('/wishlist/toggle/{id}', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
 // 2. Auth (Login/Register)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -36,12 +38,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
     Route::post('/checkout', [CartController::class, 'placeOrder'])->name('cart.placeOrder');
+    
+    // Coupon Routes
+    Route::post('/coupon/apply', [CartController::class, 'applyCoupon'])->name('coupon.apply');
+    Route::post('/coupon/remove', [CartController::class, 'removeCoupon'])->name('coupon.remove');
 
     Route::post('/book/{id}/review', [ReviewController::class, 'store'])->name('reviews.store');
 
     // 4. Nhóm Quản trị (Admin)
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/export-orders', [AdminController::class, 'exportOrders'])->name('admin.export.orders');
         
         // Quản lý sách
         Route::get('/books', [AdminController::class, 'booksIndex'])->name('admin.books.index');

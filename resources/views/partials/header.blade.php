@@ -99,10 +99,72 @@
             </button>
         </form>
 
-        <div class="hidden md:flex items-center gap-6">
-            <div class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-v2t-green transition">
-                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                <span class="text-[11px] font-medium">Thông Báo</span>
+            {{-- Thông Báo Dropdown --}}
+            <div style="position: relative; display: inline-block;" id="notif-wrapper">
+                <div onclick="toggleNotifDropdown(event)" class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-v2t-green transition" style="position: relative;">
+                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    @auth
+                        @php
+                            $recentOrders = \App\Models\Order::where('user_id', Auth::id())->latest()->take(5)->get();
+                            $notifCount = $recentOrders->where('created_at', '>=', now()->subDays(7))->count();
+                        @endphp
+                        @if($notifCount > 0)
+                            <span style="position: absolute; top: -2px; right: -6px; background: #ef4444; color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 9999px; line-height: 1.2;">{{ $notifCount }}</span>
+                        @endif
+                    @endauth
+                    <span class="text-[11px] font-medium">Thông Báo</span>
+                </div>
+
+                {{-- Dropdown Panel --}}
+                <div id="notif-dropdown" style="display: none; position: absolute; right: -20px; top: calc(100% + 8px); width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); z-index: 999; overflow: hidden;">
+                    <div style="padding: 14px 16px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.875rem; font-weight: 700; color: #111827;">🔔 Thông báo</span>
+                        @auth
+                            <span style="font-size: 0.6875rem; color: #9ca3af;">{{ $recentOrders->count() }} gần đây</span>
+                        @endauth
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        @auth
+                            @if($recentOrders->count() > 0)
+                                @foreach($recentOrders as $order)
+                                    <div style="padding: 12px 16px; border-bottom: 1px solid #f9fafb; display: flex; gap: 10px; align-items: flex-start; transition: background 0.15s; cursor: default;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                                        <span style="font-size: 1.25rem; flex-shrink: 0;">
+                                            @if($order->status == 'completed') ✅
+                                            @elseif($order->status == 'processing') 🔄
+                                            @elseif($order->status == 'cancelled') ❌
+                                            @else 📦
+                                            @endif
+                                        </span>
+                                        <div style="flex: 1; min-width: 0;">
+                                            <p style="font-size: 0.8125rem; font-weight: 600; color: #374151; margin: 0 0 2px 0;">
+                                                Đơn hàng #{{ $order->id }}
+                                                @if($order->status == 'completed')
+                                                    <span style="color: #059669;">- Hoàn thành</span>
+                                                @elseif($order->status == 'processing')
+                                                    <span style="color: #d97706;">- Đang xử lý</span>
+                                                @elseif($order->status == 'cancelled')
+                                                    <span style="color: #dc2626;">- Đã hủy</span>
+                                                @else
+                                                    <span style="color: #6b7280;">- {{ ucfirst($order->status) }}</span>
+                                                @endif
+                                            </p>
+                                            <p style="font-size: 0.6875rem; color: #9ca3af; margin: 0;">{{ number_format($order->total_price, 0, ',', '.') }}đ · {{ $order->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div style="padding: 32px 16px; text-align: center;">
+                                    <p style="font-size: 1.5rem; margin-bottom: 6px;">📭</p>
+                                    <p style="font-size: 0.8125rem; color: #9ca3af;">Chưa có thông báo nào</p>
+                                </div>
+                            @endif
+                        @else
+                            <div style="padding: 24px 16px; text-align: center;">
+                                <p style="font-size: 0.8125rem; color: #6b7280;">Vui lòng <a href="/login" style="color: #0a3622; font-weight: 700; text-decoration: underline;">đăng nhập</a> để xem thông báo.</p>
+                            </div>
+                        @endauth
+                    </div>
+                </div>
             </div>
             
             <a href="{{ route('cart.index') }}" class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-v2t-green transition relative">
@@ -113,6 +175,16 @@
                 </span>
                 
                 <span class="text-[11px] font-medium">Giỏ Hàng</span>
+            </a>
+
+            <a href="{{ route('wishlist.index') }}" class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-v2t-green transition relative">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                
+                <span class="absolute top-0 right-0 -mt-1 -mr-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                    {{ count(session('wishlist', [])) }}
+                </span>
+                
+                <span class="text-[11px] font-medium">Yêu Thích</span>
             </a>
 
             @guest
@@ -155,11 +227,12 @@
 
                 <script>
                     function toggleUserDropdown(event) {
-                        // Ngăn chặn sự kiện click lan ra ngoài cửa sổ gây đóng menu lập tức
                         event.stopPropagation(); 
-                        
                         const menu = document.getElementById('user-dropdown-menu');
                         const arrow = document.getElementById('dropdown-arrow');
+                        // Đóng notif dropdown nếu đang mở
+                        const notif = document.getElementById('notif-dropdown');
+                        if (notif) notif.style.display = 'none';
                         
                         if (menu.style.display === 'none' || menu.style.display === '') {
                             menu.style.display = 'block';
@@ -170,18 +243,38 @@
                         }
                     }
 
-                    // Tự động đóng menu ẩn đi khi người dùng click ra bất kỳ vùng nào khác ngoài màn hình
                     window.addEventListener('click', function(e) {
                         const menu = document.getElementById('user-dropdown-menu');
                         const arrow = document.getElementById('dropdown-arrow');
-                        
                         if (menu && menu.style.display === 'block') {
                             menu.style.display = 'none';
                             arrow.style.transform = 'rotate(0deg)';
+                        }
+                        const notif = document.getElementById('notif-dropdown');
+                        if (notif && notif.style.display === 'block') {
+                            notif.style.display = 'none';
                         }
                     });
                 </script>
             @endauth
         </div>
     </div>
+    <script>
+        function toggleNotifDropdown(event) {
+            event.stopPropagation();
+            const dd = document.getElementById('notif-dropdown');
+            // Đóng user dropdown nếu đang mở
+            const userMenu = document.getElementById('user-dropdown-menu');
+            const arrow = document.getElementById('dropdown-arrow');
+            if (userMenu && userMenu.style.display === 'block') {
+                userMenu.style.display = 'none';
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+            if (dd.style.display === 'none' || dd.style.display === '') {
+                dd.style.display = 'block';
+            } else {
+                dd.style.display = 'none';
+            }
+        }
+    </script>
 </header>

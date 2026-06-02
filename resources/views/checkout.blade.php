@@ -115,11 +115,39 @@
                             @endforeach
                         </div>
 
+                        @if(session()->has('coupon'))
+                            <div class="bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-xs flex justify-between items-center mb-4" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <div>
+                                    <span class="font-bold">Mã đã áp dụng: {{ session('coupon.code') }}</span>
+                                    <p class="text-[10px] text-green-600 mt-0.5" style="margin: 2px 0 0 0; font-size: 10px; color: #16a34a;">Đã giảm -{{ number_format(session('coupon.discount'), 0, ',', '.') }}đ</p>
+                                </div>
+                                <button type="submit" form="coupon-remove-form" class="text-red-600 hover:text-red-800 font-bold border-none bg-transparent cursor-pointer" style="border: none; background: transparent; color: #dc2626; font-weight: 700; cursor: pointer;">
+                                    Hủy
+                                </button>
+                            </div>
+                        @else
+                            <div class="mb-4 pt-4 border-t border-gray-100" style="border-top: 1px solid #f3f4f6; padding-top: 16px; margin-bottom: 16px;">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1.5" style="display: block; font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: 6px;">Mã giảm giá</label>
+                                <div class="flex gap-2" style="display: flex; gap: 8px;">
+                                    <input type="text" name="coupon_code" form="coupon-form" placeholder="Nhập mã V2T10, GIAM50..." class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[var(--color-v2t-green)]" style="flex-grow: 1; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem;">
+                                    <button type="submit" form="coupon-form" class="bg-[var(--color-v2t-green)] hover:opacity-95 text-white text-xs font-bold px-4 py-2 rounded-lg transition" style="background-color: var(--color-v2t-green); color: white; padding: 8px 16px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">
+                                        Áp dụng
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="text-sm space-y-3.5 border-t border-b border-gray-100 py-4 text-gray-500" style="font-size: 0.875rem; color: #6b7280; border-top: 1px solid #f3f4f6; border-b: 1px solid #f3f4f6; padding: 16px 0;">
                             <div class="flex justify-between" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                                 <span>Tạm tính</span>
                                 <span class="font-medium text-gray-900" style="color: #111827;">{{ number_format($total, 0, ',', '.') }}đ</span>
                             </div>
+                            @if(session()->has('coupon'))
+                            <div class="flex justify-between text-green-600 font-medium" style="display: flex; justify-content: space-between; color: #166534; font-weight: 500; margin-bottom: 12px;">
+                                <span>Giảm giá ({{ session('coupon.code') }})</span>
+                                <span>-{{ number_format(session('coupon.discount'), 0, ',', '.') }}đ</span>
+                            </div>
+                            @endif
                             <div class="flex justify-between" style="display: flex; justify-content: space-between;">
                                 <span>Phí vận chuyển</span>
                                 <span class="font-medium text-gray-900" style="color: #111827;">30.000đ</span>
@@ -129,7 +157,12 @@
                         <div class="flex justify-between items-center my-5" style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
                             <span class="text-base font-bold text-gray-800" style="font-size: 1rem; font-weight: 700;">Tổng cộng</span>
                             <span class="text-2xl font-serif font-bold text-[var(--color-v2t-green)]" style="font-size: 1.5rem; font-weight: 700; color: var(--color-v2t-green);">
-                                {{ number_format($total + 30000, 0, ',', '.') }}đ
+                                @php
+                                    $discount = session()->has('coupon') ? session('coupon.discount') : 0;
+                                    $grandTotal = $total + 30000 - $discount;
+                                    if ($grandTotal < 0) $grandTotal = 0;
+                                @endphp
+                                {{ number_format($grandTotal, 0, ',', '.') }}đ
                             </span>
                         </div>
 
@@ -166,4 +199,11 @@
         });
     });
 </script>
+
+<form id="coupon-form" action="{{ route('coupon.apply') }}" method="POST" class="hidden" style="display: none;">
+    @csrf
+</form>
+<form id="coupon-remove-form" action="{{ route('coupon.remove') }}" method="POST" class="hidden" style="display: none;">
+    @csrf
+</form>
 @endsection
