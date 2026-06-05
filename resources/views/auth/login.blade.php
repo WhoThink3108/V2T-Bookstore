@@ -45,18 +45,11 @@
                 <label App\for="remember" style="font-size: 0.875rem; color: #4b5563; cursor: pointer;">Lưu tài khoản đăng nhập</label>
             </div>
 
-            <div style="margin-top: 24px;">
-                <button type="submit" 
-                        style="width: 100%; padding: 12px; background-color: #1e3e36; color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s;"
-                        onmouseover="this.style.backgroundColor='#142b25'" 
-                        onmouseout="this.style.backgroundColor='#1e3e36'">
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-[var(--color-v2t-green)] text-white font-medium py-2.5 rounded hover:bg-[var(--color-v2t-green-hover)] transition duration-200 text-sm">
                     Đăng nhập
                 </button>
             </div>
-
-            <button type="submit" class="w-full bg-v2t-green text-white font-medium py-2.5 rounded hover:bg-v2t-green-hover transition duration-200 text-sm">
-                Đăng nhập
-            </button>
         </form>
     </div>
 </div>

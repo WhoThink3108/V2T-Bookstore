@@ -30,12 +30,27 @@ class AdminController extends Controller
 
         $recentOrders = Order::with(['user', 'books'])->latest()->limit(5)->get();
 
-        $monthlyRevenueData = Order::where('status', 'completed')
-            ->whereYear('created_at', now()->year)
-            ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month')
-            ->all();
+        $dbDriver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($dbDriver === 'sqlite') {
+            $monthlyRevenueData = Order::where('status', 'completed')
+                ->whereYear('created_at', now()->year)
+                ->selectRaw('strftime("%m", created_at) as month, SUM(total_price) as total')
+                ->groupBy('month')
+                ->pluck('total', 'month')
+                ->all();
+            $tempData = [];
+            foreach ($monthlyRevenueData as $m => $tot) {
+                $tempData[(int)$m] = $tot;
+            }
+            $monthlyRevenueData = $tempData;
+        } else {
+            $monthlyRevenueData = Order::where('status', 'completed')
+                ->whereYear('created_at', now()->year)
+                ->selectRaw('MONTH(created_at) as month, SUM(total_price) as total')
+                ->groupBy('month')
+                ->pluck('total', 'month')
+                ->all();
+        }
 
         $chartData = [];
         for ($i = 1; $i <= 12; $i++) {
@@ -360,5 +375,52 @@ class AdminController extends Controller
     {
         Review::findOrFail($id)->delete();
         return back()->with('success', '🗑️ Đã xóa vĩnh viễn đánh giá khỏi hệ thống!');
+    }
+
+    /* =========================================================================
+     * 7. XUẤT BÁO CÁO ĐƠN HÀNG (CSV)
+     * ========================================================================= */
+    public function exportOrders()
+    {
+        $orders = Order::with('user')->orderBy('id', 'desc')->get();
+
+        $filename = "report-orders-" . date('Y-m-d') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Mã Đơn Hàng', 'Khách Hàng', 'Email', 'Số Điện Thoại', 'Địa Chỉ Giao Hàng', 'Tổng Tiền (VND)', 'Phương Thức Thanh Toán', 'Trạng Thái', 'Ngày Tạo'];
+
+        $callback = function() use($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // UTF-8 BOM to display Vietnamese characters correctly in Excel
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            fputcsv($file, $columns);
+
+            foreach ($orders as $order) {
+                $row['id']             = 'INK-' . $order->id;
+                $row['customer']       = $order->user ? $order->user->name : 'Khách vãng lai';
+                $row['email']          = $order->user ? $order->user->email : '';
+                $row['phone']          = $order->phone;
+                $row['address']        = $order->shipping_address;
+                $row['total']          = number_format($order->total_price, 0, ',', '') . 'đ';
+                $row['payment_method'] = $order->payment_method === 'credit' ? 'Thẻ tín dụng' : 'COD';
+                $row['status']         = $order->status === 'completed' ? 'Hoàn thành' : ($order->status === 'shipping' ? 'Đang giao' : 'Đang xử lý');
+                $row['created_at']     = $order->created_at->format('Y-m-d H:i:s');
+
+                fputcsv($file, array_values($row));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
