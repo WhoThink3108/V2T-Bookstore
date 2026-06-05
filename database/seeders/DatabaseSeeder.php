@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             BookSeeder::class,        // 4. Tạo sách (Cần ID danh mục)
             OrderSeeder::class,       // 5. Tạo đơn hàng (Cần ID khách hàng)
             ReviewSeeder::class,      // 6. Tạo đánh giá bình luận (Cần ID sách và khách)
+            VoucherSeeder::class,     // 7. Tạo mã giảm giá (Có thể không cần liên kết)
         ]);
     }
 }
