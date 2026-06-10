@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     
     // Đổi mật khẩu độc lập
     Route::put('/profile/change-password', [ChangePasswordController::class, 'update'])->name('profile.password.update');
+    
     // Giỏ hàng & Thanh toán
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');

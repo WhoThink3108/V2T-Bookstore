@@ -139,6 +139,30 @@
     <div class="container mx-auto max-w-7xl">
 
         <div class="mb-8">
+            @if(session('success'))
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <strong>✅ Thành công:</strong> {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <strong>⚠️ Có lỗi xảy ra:</strong> {{ session('error') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <strong>⚠️ Vui lòng kiểm tra lại:</strong>
+                <ul style="list-style-type: disc; padding-left: 20px; margin-top: 8px; font-size: 0.875rem;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        ```
+
             <h1 class="text-3xl font-serif font-bold text-gray-900">Quản lý tài khoản</h1>
             <p class="text-xs text-gray-500 mt-1">Xin chào bạn, đây là nơi cập nhật thông tin và theo dõi đơn hàng của bạn.</p>
         </div>
@@ -155,8 +179,8 @@
                         @method('PUT')
 
                         <div class="v2t-input-group">
-                            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Họ và tên</rb>
-                                <input type="text" name="name" value="{{ old('name', $user->name) }}" class="v2t-input-field" required>
+                            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Họ và tên</label>
+                            <input type="text" name="name" value="{{ old('name', $user->name) }}" class="v2t-input-field" required>
                         </div>
 
                         <div class="v2t-input-group">
@@ -199,7 +223,7 @@
             <div class="v2t-profile-card">
                 <h3 class="font-serif font-bold text-gray-900 border-b border-gray-100 pb-3 mb-4" style="font-size: 1.15rem;">Lịch sử đặt hàng</h3>
 
-                <div class="v2t-tabs">
+                <div class="v2t-tabs" id="order-tabs" style="display: {{ $orders->count() > 0 ? 'flex' : 'none' }};">
                     <button class="v2t-tab active" onclick="filterOrders('all', this)">Tất cả</button>
                     <button class="v2t-tab" onclick="filterOrders('pending', this)">Chờ duyệt</button>
                     <button class="v2t-tab" onclick="filterOrders('processing', this)">Đang giao</button>
@@ -207,8 +231,7 @@
                     <button class="v2t-tab" onclick="filterOrders('cancelled', this)">Đã hủy</button>
                 </div>
 
-                @if($orders->count() > 0)
-                <div id="order-table-container" style="overflow-x: auto; width: 100%;">
+                <div id="order-table-container" style="overflow-x: auto; width: 100%; display: {{ $orders->count() > 0 ? 'block' : 'none' }};">
                     <table class="v2t-table">
                         <thead>
                             <tr>
@@ -247,7 +270,7 @@
                                         <a href="{{ route('orders.show', $order->id) }}" class="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-bold rounded hover:bg-gray-200 transition" style="text-decoration: none;">Chi tiết</a>
 
                                         @if($order->status == 'pending')
-                                        <form action="{{ route('orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Ní có chắc chắn muốn hủy đơn hàng #{{ $order->id }} này không? Hành động này không thể hoàn tác.');">
+                                        <form action="{{ route('orders.cancel', $order->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #{{ $order->id }} này không? Hành động này không thể hoàn tác.');">
                                             @csrf
                                             @method('PUT')
                                             <button type="submit" class="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded border-none cursor-pointer hover:bg-red-200 transition">Hủy đơn</button>
@@ -261,17 +284,13 @@
                     </table>
                 </div>
 
-                <div id="empty-state" style="display: none; text-align: center; padding: 40px 20px; color: #9ca3af;">
+                <div id="empty-state" style="display: {{ $orders->count() > 0 ? 'none' : 'block' }}; text-align: center; padding: 40px 20px; color: #9ca3af;">
                     <span style="font-size: 2.5rem;">📦</span>
-                    <p class="text-sm mt-3 italic text-gray-400">Không có đơn hàng nào thuộc trạng thái này.</p>
-                </div>
-                @else
-                <div style="text-align: center; padding: 40px 20px; color: #9ca3af;">
-                    <span style="font-size: 2.5rem;">📦</span>
-                    <p class="text-sm mt-3 italic text-gray-400">Bạn chưa đặt mua đơn hàng nào tại hệ thống của chúng tôi.</p>
+                    <p class="text-sm mt-3 italic text-gray-400">{{ $orders->count() > 0 ? 'Không có đơn hàng nào thuộc trạng thái này.' : 'Bạn chưa đặt mua đơn hàng nào tại hệ thống của chúng tôi.' }}</p>
+                    @if($orders->count() === 0)
                     <a href="/shop" class="inline-block mt-4 text-xs font-bold text-white px-4 py-2 rounded-lg" style="background-color: #1e3e36; text-decoration: none;">Đến cửa hàng sắm sách ngay</a>
+                    @endif
                 </div>
-                @endif
             </div>
 
         </div>
@@ -297,8 +316,9 @@
 
         const tableContainer = document.getElementById('order-table-container');
         const emptyState = document.getElementById('empty-state');
+        const orderTabs = document.getElementById('order-tabs');
 
-        if (tableContainer && emptyState) {
+        if (tableContainer && emptyState && orderTabs) {
             if (hasVisibleRow) {
                 tableContainer.style.display = 'block';
                 emptyState.style.display = 'none';

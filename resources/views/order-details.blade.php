@@ -16,13 +16,13 @@
             </div>
             <div>
                 @if($order->status == 'pending')
-                    <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-amber-100 text-amber-800">Chờ duyệt</span>
+                <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-amber-100 text-amber-800">Chờ duyệt</span>
                 @elseif($order->status == 'processing')
-                    <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-blue-100 text-blue-800">Đang giao</span>
+                <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-blue-100 text-blue-800">Đang giao</span>
                 @elseif($order->status == 'completed')
-                    <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-green-100 text-green-800">Thành công</span>
+                <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-green-100 text-green-800">Thành công</span>
                 @else
-                    <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-red-100 text-red-800">Đã hủy đơn</span>
+                <span class="px-4 py-2 text-sm font-bold uppercase rounded-full bg-red-100 text-red-800">Đã hủy đơn</span>
                 @endif
             </div>
         </div>
@@ -33,8 +33,16 @@
                 <p><strong>Người nhận:</strong> {{ $order->user->name ?? 'Khách hàng' }}</p>
                 <p><strong>Số điện thoại:</strong> {{ $order->phone ?? 'Không có thông tin' }}</p>
                 <p><strong>Địa chỉ giao:</strong> {{ $order->shipping_address }}</p>
-                <p><strong>Phương thức TT:</strong> 
-                    <span class="uppercase font-medium text-gray-800">{{ $order->payment_method ?? 'COD (Thanh toán khi nhận hàng)' }}</span>
+                <p><strong>Phương thức TT:</strong>
+                    <span class="font-medium text-gray-800">
+                        @if($order->payment_method == 'momo')
+                        <span class="text-[#a50064] font-bold">Ví điện tử MoMo</span>
+                        @elseif($order->payment_method == 'credit')
+                        <span class="text-blue-600 font-bold">Thẻ Tín dụng / Ghi nợ</span>
+                        @else
+                        Thanh toán khi nhận hàng (COD)
+                        @endif
+                    </span>
                 </p>
             </div>
         </div>
@@ -81,7 +89,7 @@
                 </div>
             </div>
         </div>
-        
+
     </div>
 </div>
 @endsection

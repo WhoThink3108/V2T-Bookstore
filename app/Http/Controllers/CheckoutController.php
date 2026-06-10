@@ -32,8 +32,10 @@ class CheckoutController extends Controller
                 'email' => 'required|email|max:255',
                 'address' => 'required|string',
                 'city' => 'required|string',
-                'phone' => 'required|string',
+                'phone' => ['required', 'string', 'regex:/^0[0-9]{9}$/'],
                 'payment_method' => 'required|string',
+            ], [
+                'phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng nhập 10 chữ số bắt đầu bằng số 0.',
             ]);
 
             $cart = session()->get('cart', []);
@@ -48,12 +50,7 @@ class CheckoutController extends Controller
 
             $discount = 0;
             if (session()->has('coupon')) {
-                $coupon = session()->get('coupon');
-                if ($coupon['code'] === 'V2T10') {
-                    $discount = $subtotal * 0.1;
-                } elseif ($coupon['code'] === 'GIAM50' && $subtotal >= 200000) {
-                    $discount = 50000;
-                }
+                $discount = session('coupon.discount');
             }
 
             $totalAmount = $subtotal + 30000 - $discount;

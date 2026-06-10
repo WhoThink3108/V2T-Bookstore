@@ -53,11 +53,22 @@
                             </div>
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-xs font-semibold text-gray-500 mb-1.5" style="display: block; font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: 6px;">Thành phố / Tỉnh</label>
-                                <input type="text" name="city" required placeholder="Ví dụ: TP. Hồ Chí Minh" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[var(--color-v2t-green)] transition shadow-sm" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem;">
+                                <select id="city-dropdown" name="city" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[var(--color-v2t-green)] transition shadow-sm appearance-none" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right .7rem top 50%; background-size: .65rem auto; cursor: pointer;">
+                                    <option value="" disabled selected>-- Chọn Tỉnh / Thành phố --</option>
+                                    <option value="Đang tải dữ liệu..." disabled id="loading-option">Đang tải dữ liệu...</option>
+                                </select>
                             </div>
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-xs font-semibold text-gray-500 mb-1.5" style="display: block; font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: 6px;">Số điện thoại</label>
-                                <input type="text" name="phone" required placeholder="Ví dụ: 0901 234 567" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[var(--color-v2t-green)] transition shadow-sm" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem;">
+                                <input type="tel" 
+                                       name="phone" 
+                                       required 
+                                       pattern="0[0-9]{9}"
+                                       maxlength="10"
+                                       title="Vui lòng nhập đúng 10 số điện thoại, bắt đầu bằng số 0"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                       placeholder="Ví dụ: 0901234567" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[var(--color-v2t-green)] transition shadow-sm" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.875rem;">
                             </div>
                         </div>
                     </div>
@@ -210,6 +221,54 @@
                 activeCard.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
             }
         });
+    });
+</script>
+
+<script>
+    // JS 1: Đổi màu viền khi chọn Phương thức thanh toán (Code cũ giữ nguyên)
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.payment-method-card').forEach(card => {
+                card.style.border = "1px solid #e5e7eb";
+                card.style.backgroundColor = "#ffffff";
+            });
+            if (this.checked) {
+                const activeCard = this.closest('.payment-method-card');
+                activeCard.style.border = "2px solid var(--color-v2t-green)";
+                activeCard.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+            }
+        });
+    });
+
+    // JS 2: GỌI API ĐỔ DỮ LIỆU TỈNH THÀNH (Tính năng MỚI)
+    document.addEventListener('DOMContentLoaded', function() {
+        const cityDropdown = document.getElementById('city-dropdown');
+        const loadingOption = document.getElementById('loading-option');
+
+        // Lấy danh sách từ API công khai của Việt Nam
+        fetch('https://provinces.open-api.vn/api/?depth=1')
+            .then(response => response.json())
+            .then(data => {
+                // Xóa dòng chữ "Đang tải..."
+                if (loadingOption) {
+                    loadingOption.remove();
+                }
+
+                // Chạy vòng lặp in 63 Tỉnh Thành vào Dropdown
+                data.forEach(province => {
+                    const option = document.createElement('option');
+                    // Gán tên Tỉnh Thành vào giá trị Value để submit lên server
+                    option.value = province.name; 
+                    option.textContent = province.name;
+                    cityDropdown.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Lỗi khi tải danh sách tỉnh thành:', error);
+                loadingOption.textContent = 'Lỗi tải dữ liệu. Vui lòng nhập tay bên dưới.';
+                // Sơ cua: Nếu API sập thì biến nó lại thành thẻ input cho khách nhập tay
+                cityDropdown.outerHTML = '<input type="text" name="city" required placeholder="Nhập tên Tỉnh/Thành" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700" style="width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px;">';
+            });
     });
 </script>
 
