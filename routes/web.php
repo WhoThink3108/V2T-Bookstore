@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/wishlist', [UserWishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/toggle/{id}', [UserWishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::get('/checkout/momo-return', [CheckoutController::class, 'momoReturn'])->name('momo.return');
 
     // 4. Nhóm Quản trị (Admin)
     Route::prefix('admin')->group(function () {

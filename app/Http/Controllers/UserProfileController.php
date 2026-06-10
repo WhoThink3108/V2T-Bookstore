@@ -63,7 +63,7 @@ class UserProfileController extends Controller
         foreach ($order->items as $item) {
             if ($item->book) {
                 // Lấy số lượng khách đã mua cộng trả lại vào kho
-                $item->book->increment('quantity', $item->quantity);
+                $item->book->increment('stock', $item->quantity);
             }
         }
 
