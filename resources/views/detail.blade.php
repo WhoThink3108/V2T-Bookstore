@@ -129,24 +129,20 @@
     <div class="lg:col-span-2 space-y-8">
 
         {{-- Card mua hàng --}}
-        <div class="detail-info-card" style="padding: 28px;">
-            <h3 style="font-size: 0.75rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Đặt mua ngay</h3>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                 <div class="detail-qty-wrap">
                     <button type="button" id="qty-minus">&minus;</button>
-                    <input type="number" id="qty-input" value="1" min="1" max="{{ $book->stock }}" readonly>
+                    <input type="number" id="book-qty" value="1" min="1" max="{{ $book->stock }}" readonly>
                     <button type="button" id="qty-plus">&plus;</button>
                 </div>
 
-                <form action="{{ route('cart.add', $book->id) }}" method="POST" class="flex-1 flex gap-3" id="cart-form">
-                    @csrf
-                    <input type="hidden" name="quantity" id="qty-hidden" value="1">
+                <div class="flex-1 flex gap-3">
                     @if($book->stock > 0)
-                        <button type="submit" class="detail-btn-cart flex-1">🛒 Thêm vào giỏ hàng</button>
+                        <button type="button" onclick="addDetailToCart(event, {{ $book->id }})" class="detail-btn-cart flex-1">🛒 Thêm vào giỏ hàng</button>
                     @else
                         <button type="button" disabled style="flex:1; padding: 14px 28px; border-radius: 12px; background: #f3f4f6; color: #9ca3af; font-weight: 700; border: none; cursor: not-allowed;">Tạm hết hàng</button>
                     @endif
-                </form>
+                </div>
 
                 <form action="{{ route('wishlist.toggle', $book->id) }}" method="POST">
                     @csrf
@@ -159,7 +155,6 @@
                     </button>
                 </form>
             </div>
-        </div>
 
         {{-- Tóm tắt nội dung --}}
         <div>
