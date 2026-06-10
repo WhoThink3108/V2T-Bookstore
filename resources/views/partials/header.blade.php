@@ -115,7 +115,7 @@
                         @auth
                             @if($recentOrders->count() > 0)
                                 @foreach($recentOrders as $order)
-                                    <div style="padding: 12px 16px; border-bottom: 1px solid #f9fafb; display: flex; gap: 10px; align-items: flex-start; transition: background 0.15s; cursor: default;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                                    <a href="{{ route('orders.show', $order->id) }}" style="padding: 12px 16px; border-bottom: 1px solid #f9fafb; display: flex; gap: 10px; align-items: flex-start; transition: background 0.15s; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
                                         <span style="font-size: 1.25rem; flex-shrink: 0;">
                                             @if($order->status == 'completed') ✅
                                             @elseif($order->status == 'processing') 🔄
@@ -138,7 +138,7 @@
                                             </p>
                                             <p style="font-size: 0.6875rem; color: #9ca3af; margin: 0;">{{ number_format($order->total_price, 0, ',', '.') }}đ · {{ $order->created_at->diffForHumans() }}</p>
                                         </div>
-                                    </div>
+                                    </a>
                                 @endforeach
                             @else
                                 <div style="padding: 32px 16px; text-align: center;">
