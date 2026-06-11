@@ -90,7 +90,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/suppliers/{id}/edit', [AdminController::class, 'suppliersEdit'])->name('admin.suppliers.edit');
         Route::put('/suppliers/{id}', [AdminController::class, 'suppliersUpdate'])->name('admin.suppliers.update');
         Route::delete('/suppliers/{id}', [AdminController::class, 'suppliersDestroy'])->name('admin.suppliers.destroy');
-
+        Route::get('/suppliers/{id}/import', [AdminController::class, 'suppliersImport'])->name('admin.suppliers.import');
+        Route::post('/suppliers/{id}/import', [AdminController::class, 'suppliersImportStore'])->name('admin.suppliers.import.store');
         // Nghiệp vụ Quản lý đánh giá sách
         Route::get('/reviews', [AdminController::class, 'reviewsIndex'])->name('admin.reviews.index');
         Route::post('/reviews/{id}/approve', [AdminController::class, 'reviewsApprove'])->name('admin.reviews.approve');

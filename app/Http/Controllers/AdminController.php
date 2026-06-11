@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Supplier;
 use App\Models\Review;
+use App\Models\Import;
+use App\Models\ImportItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -363,6 +365,66 @@ class AdminController extends Controller
         $supplier = Supplier::findOrFail($id);
         $supplier->delete();
         return redirect()->route('admin.suppliers.index')->with('success', '🗑️ Đã xóa nhà cung cấp khỏi hệ thống!');
+    }
+
+    public function suppliersImport($id)
+    {
+        $supplier = Supplier::findOrFail($id);
+        // Lấy tất cả sách ra để Admin chọn cuốn muốn nhập kho
+        $books = Book::orderBy('title', 'asc')->get();
+        return view('admin.suppliers.import', compact('supplier', 'books'));
+    }
+
+    public function suppliersImportStore(Request $request, $id)
+    {
+        $supplier = Supplier::findOrFail($id);
+
+        $request->validate([
+            'book_ids' => 'required|array|min:1',
+            'quantities' => 'required|array',
+            'import_prices' => 'required|array',
+            'note' => 'nullable|string',
+        ], [
+            'book_ids.required' => 'Vui lòng chọn ít nhất một cuốn sách để nhập kho.',
+        ]);
+
+        // Dùng Transaction để đảm bảo an toàn dữ liệu tuyệt đối
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplier) {
+            // 1. Tạo phiếu nhập tổng
+            $import = Import::create([
+                'supplier_id' => $supplier->id,
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'total_amount' => 0, // Sẽ tính toán và update sau
+                'note' => $request->note,
+            ]);
+
+            $totalAmount = 0;
+
+            // 2. Duyệt qua từng dòng sách được chọn để lưu chi tiết và cộng kho
+            foreach ($request->book_ids as $index => $bookId) {
+                $qty = $request->quantities[$index];
+                $price = $request->import_prices[$index];
+                $subTotal = $qty * $price;
+                $totalAmount += $subTotal;
+
+                // Lưu vào bảng chi tiết phiếu nhập
+                ImportItem::create([
+                    'import_id' => $import->id,
+                    'book_id' => $bookId,
+                    'quantity' => $qty,
+                    'import_price' => $price,
+                ]);
+
+                // ĐẬP THẲNG VÀO KHO: Cộng dồn số lượng vào bảng books
+                $book = Book::findOrFail($bookId);
+                $book->increment('stock', $qty);
+            }
+
+            // 3. Cập nhật lại tổng tiền chính xác cho phiếu nhập
+            $import->update(['total_amount' => $totalAmount]);
+        });
+
+        return redirect()->route('admin.suppliers.index')->with('success', '🎉 Lập phiếu nhập kho thành công! Sách đã được tự động cộng thẳng vào kho hàng.');
     }
 
     /* =========================================================================
