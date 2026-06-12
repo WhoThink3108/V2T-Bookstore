@@ -39,10 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/orders/{id}/cancel', [UserProfileController::class, 'cancel'])->name('orders.cancel');
     Route::put('/orders/{id}/complete', [UserProfileController::class, 'completeOrder'])->name('orders.complete');
     Route::get('/orders/{id}/details', [UserProfileController::class, 'showOrder'])->name('orders.show');
-    
+
     // Đổi mật khẩu độc lập
     Route::put('/profile/change-password', [ChangePasswordController::class, 'update'])->name('profile.password.update');
-    
+
     // Giỏ hàng & Thanh toán
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
@@ -64,7 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
         Route::get('/export-orders', [AdminController::class, 'exportOrders'])->name('admin.export.orders');
-        
+
         // Quản lý sách
         Route::get('/books', [AdminController::class, 'booksIndex'])->name('admin.books.index');
         Route::get('/books/create', [AdminController::class, 'booksCreate'])->name('admin.books.create');
@@ -105,4 +105,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/vouchers/{id}', [AdminVoucherController::class, 'destroy'])->name('admin.vouchers.destroy');
         Route::post('/vouchers/{id}/toggle-status', [AdminVoucherController::class, 'toggleStatus'])->name('admin.vouchers.toggleStatus');
     });
+    Route::get('/kiem-tra-ai', function () {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->get('https://generativelanguage.googleapis.com/v1beta/models?key=' . env('GEMINI_API_KEY'));
+            return $response->json();
+        });
 });
