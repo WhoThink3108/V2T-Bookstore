@@ -109,7 +109,7 @@
                                         @elseif($order->status == 'processing')
                                             <option value="processing" selected>Đang giao</option>
                                             <option value="completed">Xác nhận Thành công</option>
-                                            <option value="cancelled">Hủy đơn (Khách bom)</option>
+                                            <option value="cancelled">Hủy đơn </option>
                                         @endif
                                     </select>
                                 </form>
