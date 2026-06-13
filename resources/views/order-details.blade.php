@@ -99,13 +99,15 @@
                         <span>{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
                     </div>
 
-                    {{-- Chỉ hiển thị mục này nếu đơn hàng có áp mã giảm giá --}}
-                    @if(isset($order->discount_amount) && $order->discount_amount > 0)
+                    {{-- Bỏ đoạn > 0 đi, chỉ cần có cột này trong DB là cho hiện luôn --}}
+                    @if(isset($order->discount_amount))
                     <div class="flex justify-between text-sm font-medium text-green-600">
                         <span>
                             Voucher giảm giá: 
-                            @if(isset($order->discount_code))
+                            @if(!empty($order->discount_code))
                                 <span class="uppercase border border-green-200 bg-green-50 px-1 rounded text-xs ml-1">{{ $order->discount_code }}</span>
+                            @else
+                                <span class="text-xs text-gray-400 ml-1">(Không áp dụng)</span>
                             @endif
                         </span>
                         <span>- {{ number_format($order->discount_amount, 0, ',', '.') }}đ</span>

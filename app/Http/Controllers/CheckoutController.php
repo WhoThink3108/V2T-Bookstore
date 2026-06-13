@@ -23,7 +23,7 @@ class CheckoutController extends Controller
         return view('checkout', compact('cart'));
     }
 
-    // 2. Xử lý đặt hàng (Đã fix logic Transaction & MoMo)
+    // 2. Xử lý đặt hàng (Đã fix logic Transaction, MoMo & Voucher)
     public function placeOrder(Request $request)
     {
         try {
@@ -48,12 +48,18 @@ class CheckoutController extends Controller
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $discount = 0;
+            // Lấy thông tin Voucher từ Session ra
+            $discountAmount = 0;
+            $discountCode = null;
+            $voucherId = null;
+
             if (session()->has('coupon')) {
-                $discount = session('coupon.discount');
+                $discountAmount = session('coupon.discount');
+                $discountCode = session('coupon.code');
+                $voucherId = session('coupon.id');
             }
 
-            $totalAmount = $subtotal + 30000 - $discount;
+            $totalAmount = $subtotal + 30000 - $discountAmount;
             if ($totalAmount < 0) {
                 $totalAmount = 0;
             }
@@ -63,6 +69,7 @@ class CheckoutController extends Controller
 
             $fullShippingAddress = $request->address . ', ' . $request->city;
 
+            // LƯU ĐƠN HÀNG VÀ KÈM LUÔN MÃ GIẢM GIÁ
             $order = Order::create([
                 'user_id'          => Auth::id(),
                 'total_price'      => $totalAmount,
@@ -70,6 +77,8 @@ class CheckoutController extends Controller
                 'phone'            => $request->phone,
                 'shipping_address' => $fullShippingAddress,
                 'payment_method'   => $request->payment_method,
+                'discount_code'    => $discountCode,     // Thêm dòng này
+                'discount_amount'  => $discountAmount,   // Thêm dòng này
             ]);
 
             foreach ($cart as $bookId => $item) {
@@ -90,19 +99,25 @@ class CheckoutController extends Controller
                 $book->decrement('stock', $item['quantity']);
             }
 
-            // BẺ LÁI SANG MOMO NGAY TẠI ĐÂY (CHƯA COMMIT, CHƯA XÓA GIỎ HÀNG)
+            // TĂNG LƯỢT SỬ DỤNG VOUCHER (Nếu có dùng mã)
+            if ($voucherId) {
+                $voucher = Voucher::find($voucherId);
+                if ($voucher) {
+                    $voucher->increment('uses');
+                }
+            }
+
+            // BẺ LÁI SANG MOMO NGAY TẠI ĐÂY
             if ($request->payment_method === 'momo') {
                 $momoResult = $this->createMomoPayment($order);
                 
                 if ($momoResult['success']) {
-                    // Nếu MoMo tạo link ngon lành -> Commit DB, xóa giỏ hàng, bay qua MoMo
                     DB::commit();
                     session()->forget('cart');
                     session()->forget('coupon');
                     return redirect($momoResult['url']);
                 } else {
-                    // Nếu MoMo báo lỗi -> Rollback trả lại kho, giữ nguyên giỏ hàng, in lỗi
-                    DB::rollBack();
+                    DB::rollBack(); // Lỗi MoMo thì nhả lại sách tồn kho, nhả luôn lượt dùng Voucher
                     return redirect()->back()->with('error', 'Lỗi thanh toán MoMo: ' . $momoResult['message']);
                 }
             }
@@ -112,7 +127,7 @@ class CheckoutController extends Controller
             session()->forget('cart');
             session()->forget('coupon');
 
-            return redirect('/')->with('success', '🎉 Đặt đơn hàng thành công! Đơn hàng #' . $order->id . ' của bạn đã được ghi nhận.');
+            return redirect('/profile')->with('success', '🎉 Đặt đơn hàng thành công! Đơn hàng #' . $order->id . ' của bạn đã được ghi nhận.');
 
         } catch (\Exception $e) {
             if (DB::transactionLevel() > 0) {
