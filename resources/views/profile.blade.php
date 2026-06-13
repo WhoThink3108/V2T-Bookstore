@@ -138,18 +138,7 @@
 <div class="v2t-profile-container">
     <div class="container mx-auto max-w-7xl">
 
-        <div class="mb-8">
-            @if(session('success'))
-            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                <strong>✅ Thành công:</strong> {{ session('success') }}
-            </div>
-            @endif
-
-            @if(session('error'))
-            <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                <strong>⚠️ Có lỗi xảy ra:</strong> {{ session('error') }}
-            </div>
-            @endif
+        <div class="mb-8"
 
             @if ($errors->any())
             <div style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
