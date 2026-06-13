@@ -76,15 +76,45 @@
                 </tbody>
             </table>
 
+            {{-- KHU VỰC TỔNG KẾT TIỀN CHUẨN SHOPEE --}}
             <div class="mt-6 flex justify-end">
-                <div class="w-64 space-y-3">
+                <div class="w-72 space-y-3">
+                    @php
+                        // Tính tổng tiền gốc của các món hàng
+                        $subTotal = $order->items->sum(function($item) {
+                            return $item->price * $item->quantity;
+                        });
+                        
+                        // Phí vận chuyển mặc định (Bro có thể thay bằng $order->shipping_fee nếu có trong DB)
+                        $shippingFee = 30000;
+                    @endphp
+
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>Tổng tiền hàng:</span>
+                        <span>{{ number_format($subTotal, 0, ',', '.') }}đ</span>
+                    </div>
+
                     <div class="flex justify-between text-sm text-gray-600">
                         <span>Phí vận chuyển:</span>
-                        <span>30.000đ</span>
+                        <span>{{ number_format($shippingFee, 0, ',', '.') }}đ</span>
                     </div>
+
+                    {{-- Chỉ hiển thị mục này nếu đơn hàng có áp mã giảm giá --}}
+                    @if(isset($order->discount_amount) && $order->discount_amount > 0)
+                    <div class="flex justify-between text-sm font-medium text-green-600">
+                        <span>
+                            Voucher giảm giá: 
+                            @if(isset($order->discount_code))
+                                <span class="uppercase border border-green-200 bg-green-50 px-1 rounded text-xs ml-1">{{ $order->discount_code }}</span>
+                            @endif
+                        </span>
+                        <span>- {{ number_format($order->discount_amount, 0, ',', '.') }}đ</span>
+                    </div>
+                    @endif
+
                     <div class="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-3">
-                        <span>Tổng cộng:</span>
-                        <span class="text-green-800">{{ number_format($order->total_price, 0, ',', '.') }}đ</span>
+                        <span>Thành tiền:</span>
+                        <span class="text-[var(--color-v2t-green)]" style="color: #1e3e36;">{{ number_format($order->total_price, 0, ',', '.') }}đ</span>
                     </div>
                 </div>
             </div>
