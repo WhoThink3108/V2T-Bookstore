@@ -53,7 +53,7 @@ class UserReviewController extends Controller
 
             if ($apiKey) {
                 // Cấu hình Prompt "Nhốt" AI: Ép nó chỉ được nhả ra chữ VIOLATED hoặc SAFE
-                $prompt = "Bạn là hệ thống kiểm duyệt bình luận tự động cho một nhà sách. Hãy phân tích bình luận sau. Nếu bình luận chứa từ ngữ chửi thề, tục tĩu, phân biệt vùng miền, thù ghét, hoặc quảng cáo rác (spam link), hãy trả lời duy nhất 1 từ: 'VIOLATED'. Nếu bình luận là nhận xét bình thường về sách (khen hoặc chê một cách lịch sự), hãy trả lời duy nhất 1 từ: 'SAFE'. Bình luận cần kiểm duyệt: \"" . $commentText . "\"";
+                $prompt = "Bạn là hệ thống kiểm duyệt bình luận tự động cho một nhà sách. Hãy phân tích bình luận sau. Nếu bình luận chứa từ ngữ chửi thề, tục tĩu, phân biệt vùng miền, thù ghét, hoặc quảng cáo rác (spam link),cẩn thận cả những từ ngữ teen code dùng để tục tĩu, hãy trả lời duy nhất 1 từ: 'VIOLATED'. Nếu bình luận là nhận xét bình thường về sách (khen hoặc chê một cách lịch sự), hãy trả lời duy nhất 1 từ: 'SAFE'. Bình luận cần kiểm duyệt: \"" . $commentText . "\"";
 
                 // Gửi request API thẳng đến não bộ của Google Gemini
                 // Quay lại kênh v1beta và gọi con "Flash-lite" siêu nhẹ (gemini-1.5-flash-8b)

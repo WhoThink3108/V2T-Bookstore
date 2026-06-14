@@ -68,22 +68,39 @@ class RegisterController extends Controller
 
     // BƯỚC 2: Kiểm tra OTP và Tạo tài khoản thực sự
     public function verifyOtp(Request $request) {
-        $request->validate([
+        // Validate bằng Validator để ép trả về JSON nếu có lỗi
+        $validator = Validator::make($request->all(), [
             'otp_code' => 'required|numeric'
+        ], [
+            'otp_code.required' => 'Bro chưa nhập mã OTP kìa.',
+            'otp_code.numeric' => 'Mã OTP chỉ bao gồm các chữ số.'
         ]);
 
-        // Lấy lại cái gói thông tin mình cất trong Session lúc nãy
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+
+        // Lấy lại cái gói thông tin mình cất trong Session
         $registerData = Session::get('register_data');
 
         // Kiểm tra xem có dữ liệu không, hoặc quá 15 phút chưa
         if (!$registerData || now()->greaterThan($registerData['expires_at'])) {
             Session::forget('register_data');
-            return redirect('/register')->with('error', 'Phiên đăng ký đã hết hạn. Vui lòng thao tác lại từ đầu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiên đăng ký đã hết hạn hoặc không tồn tại. Vui lòng tải lại trang và làm lại từ đầu.'
+            ]);
         }
 
         // Kiểm tra mã OTP nhập vào có khớp không
         if ($request->otp_code != $registerData['otp']) {
-            return redirect()->back()->with('error', 'Mã OTP không chính xác. Bro kiểm tra lại email nhé!');
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã OTP không chính xác. Bro kiểm tra lại email nhé!'
+            ]);
         }
 
         // Mọi thứ qua cửa trót lọt -> Nhét thẳng vào Database
@@ -100,6 +117,13 @@ class RegisterController extends Controller
         // Auto đăng nhập
         Auth::login($user);
 
-        return redirect('/')->with('success', '🎉 Chúc mừng bro đã gia nhập V2T Bookstore!');
+        // Ném thêm cái session flash message để lúc redirect về trang chủ nó hiện thông báo Toast
+        Session::flash('success', '🎉 Chúc mừng bro đã gia nhập V2T Bookstore!');
+
+        // Báo cho JS biết là thành công và quăng kèm cái link để nó tự chuyển hướng
+        return response()->json([
+            'success' => true,
+            'redirect_url' => url('/')
+        ]);
     }
 }

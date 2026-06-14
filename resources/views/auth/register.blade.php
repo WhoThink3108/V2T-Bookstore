@@ -6,10 +6,10 @@
 <div class="flex items-center justify-center min-h-[70vh]">
     <div class="bg-white p-10 rounded-lg shadow-sm w-full max-w-md border border-gray-100 my-10 relative overflow-hidden">
         
-        {{-- Loader (Sẽ hiện lúc đang chờ server gửi mail) --}}
+        {{-- Loader (Sẽ hiện lúc đang chờ server gửi mail hoặc check OTP) --}}
         <div id="loading-overlay" class="hidden absolute inset-0 bg-white bg-opacity-80 z-10 flex flex-col items-center justify-center">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-v2t-green)] mb-3"></div>
-            <p class="text-xs font-semibold text-[var(--color-v2t-green)]">Đang gửi mã xác nhận...</p>
+            <p id="loading-text" class="text-xs font-semibold text-[var(--color-v2t-green)]">Đang xử lý...</p>
         </div>
 
         <div class="text-center mb-8">
@@ -22,16 +22,17 @@
             <a href="/register" class="pb-2 px-4 border-b-2 border-[var(--color-v2t-green)] font-medium text-[var(--color-v2t-green)] text-sm">Đăng ký</a>
         </div>
 
-        {{-- Báo lỗi chung --}}
-        <div id="error-alert" class="hidden bg-[#fee2e2] text-[#991b1b] p-3 rounded mb-4 text-xs font-medium"></div>
-
-        <form id="register-form" action="{{ route('register.send_otp') }}" method="POST">
+        {{-- Form không cần action vì JS sẽ thầu hết --}}
+        <form id="register-form" onsubmit="return false;">
             @csrf
             
-            {{-- BƯỚC 1: NHẬP THÔNG TIN CƠ BẢN --}}
+            {{-- ================= BƯỚC 1: NHẬP THÔNG TIN CƠ BẢN ================= --}}
             <div id="step-1">
                 <h2 class="text-xl font-serif font-bold mb-1">Tạo tài khoản mới</h2>
-                <p class="text-xs text-gray-500 mb-6">Tham gia cộng đồng yêu sách của chúng tôi ngay hôm nay.</p>
+                <p class="text-xs text-gray-500 mb-4">Tham gia cộng đồng yêu sách của chúng tôi ngay hôm nay.</p>
+
+                {{-- Khung báo lỗi riêng cho Bước 1 --}}
+                <div id="error-alert-step1" class="hidden bg-[#fee2e2] text-[#991b1b] p-3 rounded mb-4 text-xs font-medium leading-relaxed"></div>
 
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Họ và tên</label>
@@ -58,9 +59,9 @@
                 </button>
             </div>
 
-            {{-- BƯỚC 2: NHẬP OTP XÁC NHẬN --}}
+            {{-- ================= BƯỚC 2: NHẬP OTP XÁC NHẬN ================= --}}
             <div id="step-2" class="hidden">
-                <div class="text-center mb-6">
+                <div class="text-center mb-4">
                     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#ecfdf5] text-[var(--color-v2t-green)] mb-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                     </div>
@@ -68,12 +69,15 @@
                     <p class="text-xs text-gray-500">Mã gồm 6 chữ số đã được gửi tới <br><span id="display-email" class="font-bold text-gray-800"></span></p>
                 </div>
 
+                {{-- Khung báo lỗi riêng cho Bước 2 (Nhập sai mã OTP) --}}
+                <div id="error-alert-step2" class="hidden bg-[#fee2e2] text-[#991b1b] p-3 rounded mb-4 text-xs font-medium text-center"></div>
+
                 <div class="mb-6">
                     <label class="block text-xs font-semibold text-gray-700 mb-2 text-center">Nhập mã xác thực</label>
                     <input type="text" id="otp_code" name="otp_code" placeholder="------" maxlength="6" class="w-full text-center tracking-[0.5em] text-lg font-bold px-3 py-3 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-v2t-green)] focus:ring-1 focus:ring-[var(--color-v2t-green)] transition">
                 </div>
 
-                <button type="submit" class="w-full bg-[var(--color-v2t-green)] text-white font-medium py-2.5 rounded hover:bg-[var(--color-v2t-green-hover)] transition duration-200 text-sm mb-4">
+                <button type="button" onclick="verifyOtpRequest()" class="w-full bg-[var(--color-v2t-green)] text-white font-medium py-2.5 rounded hover:bg-[var(--color-v2t-green-hover)] transition duration-200 text-sm mb-4">
                     Hoàn tất đăng ký
                 </button>
 
@@ -91,44 +95,40 @@
     </div>
 </div>
 
-{{-- SCRIPT ĐIỀU HƯỚNG BƯỚC 1 -> BƯỚC 2 BẰNG AJAX --}}
+{{-- SCRIPT BẮN AJAX TOÀN TẬP --}}
 <script>
+    // --- HÀM 1: GỬI YÊU CẦU LẤY OTP ---
     function sendOtpRequest() {
         const form = document.getElementById('register-form');
         const formData = new FormData(form);
-        const errorAlert = document.getElementById('error-alert');
+        const errorAlert = document.getElementById('error-alert-step1');
         const overlay = document.getElementById('loading-overlay');
-        const emailInput = document.getElementById('email').value;
-
-        // Xóa lỗi cũ, bật loader
+        
+        document.getElementById('loading-text').innerText = 'Đang gửi mã OTP...';
         errorAlert.classList.add('hidden');
         overlay.classList.remove('hidden');
 
-        // Gửi AJAX tới Controller
         fetch("{{ route('register.send_otp') }}", {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json' // Ép Laravel trả về chuẩn JSON nếu có lỗi
             }
         })
         .then(response => response.json())
         .then(data => {
             overlay.classList.add('hidden');
             
-            if(data.success) {
-                // Đổi form action để bước 2 gọi qua hàm verify OTP
-                form.action = "{{ route('register.verify_otp') }}";
-                
-                // Chuyển giao diện
+            if(data.success || data.message === 'OTP sent') {
+                // Chuyển sang Bước 2 mượt mà
                 document.getElementById('step-1').classList.add('hidden');
                 document.getElementById('step-2').classList.remove('hidden');
-                document.getElementById('display-email').innerText = emailInput;
-                
+                document.getElementById('display-email').innerText = document.getElementById('email').value;
                 startResendCountdown();
             } else {
-                // In lỗi Validate ra màn hình
-                errorAlert.innerHTML = Object.values(data.errors).map(err => `• ${err}`).join('<br>');
+                // In lỗi Validate (thiếu tên, sai email...)
+                errorAlert.innerHTML = Object.values(data.errors || {err: data.message}).map(err => `• ${err}`).join('<br>');
                 errorAlert.classList.remove('hidden');
             }
         })
@@ -139,6 +139,55 @@
         });
     }
 
+    // --- HÀM 2: KIỂM TRA OTP VÀ HOÀN TẤT ĐĂNG KÝ ---
+    function verifyOtpRequest() {
+        const form = document.getElementById('register-form');
+        const formData = new FormData(form);
+        const errorAlert = document.getElementById('error-alert-step2');
+        const overlay = document.getElementById('loading-overlay');
+
+        document.getElementById('loading-text').innerText = 'Đang xác thực...';
+        errorAlert.classList.add('hidden');
+        overlay.classList.remove('hidden');
+
+        fetch("{{ route('register.verify_otp') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json' 
+            }
+        })
+        .then(async response => {
+            // Trường hợp backend của bro trả về redirect thẳng (Đăng ký thành công)
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+            
+            const data = await response.json();
+            overlay.classList.add('hidden');
+
+            // Trường hợp backend trả JSON thành công
+            if (response.ok && data.success) {
+                window.location.href = data.redirect_url || '/home'; 
+            } else {
+                // Báo lỗi sai OTP tại chỗ
+                errorAlert.innerHTML = `⚠️ ${data.message || 'Mã OTP không chính xác hoặc đã hết hạn.'}`;
+                if (data.errors) {
+                    errorAlert.innerHTML = Object.values(data.errors).map(err => `• ${err}`).join('<br>');
+                }
+                errorAlert.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            overlay.classList.add('hidden');
+            errorAlert.innerHTML = '⚠️ Có lỗi xảy ra trong quá trình xác thực. Vui lòng thử lại!';
+            errorAlert.classList.remove('hidden');
+        });
+    }
+
+    // --- HÀM 3: ĐẾM NGƯỢC GỬI LẠI MÃ ---
     function startResendCountdown() {
         const resendBtn = document.getElementById('resend-btn');
         const countdownTimer = document.getElementById('countdown-timer');
