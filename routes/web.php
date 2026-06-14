@@ -32,37 +32,42 @@ Route::post('/register/verify-otp', [RegisterController::class, 'verifyOtp'])->n
 
 // Luồng Đăng xuất
 Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
-// 3. Nhóm yêu cầu Đăng nhập (User)
+
+// 2. Khu vực dành riêng cho người dùng đã đăng nhập
 Route::middleware('auth')->group(function () {
-    // Quản lý hồ sơ cá nhân
-    Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
-    Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
-    Route::put('/orders/{id}/cancel', [UserProfileController::class, 'cancel'])->name('orders.cancel');
-    Route::put('/orders/{id}/complete', [UserProfileController::class, 'completeOrder'])->name('orders.complete');
-    Route::get('/orders/{id}/details', [UserProfileController::class, 'showOrder'])->name('orders.show');
+    // 2.1: KHÁCH HÀNG
+    Route::middleware('customer')->group(function () {
+        // Quản lý hồ sơ cá nhân
+        Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
+        Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
+        Route::put('/orders/{id}/cancel', [UserProfileController::class, 'cancel'])->name('orders.cancel');
+        Route::put('/orders/{id}/complete', [UserProfileController::class, 'completeOrder'])->name('orders.complete');
+        Route::get('/orders/{id}/details', [UserProfileController::class, 'showOrder'])->name('orders.show');
 
-    // Đổi mật khẩu độc lập
-    Route::put('/profile/change-password', [ChangePasswordController::class, 'update'])->name('profile.password.update');
+        // Đổi mật khẩu độc lập
+        Route::put('/profile/change-password', [ChangePasswordController::class, 'update'])->name('profile.password.update');
 
-    // Giỏ hàng & Thanh toán
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('cart.checkout');
-    Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('cart.placeOrder');
-    Route::post('/checkout/coupon', [CheckoutController::class, 'applyCoupon'])->name('coupon.apply');
-    Route::delete('/checkout/coupon', [CheckoutController::class, 'removeCoupon'])->name('coupon.remove');
+        // Giỏ hàng & Thanh toán
+        Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
+        Route::post('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+        Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+        Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('cart.checkout');
+        Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('cart.placeOrder');
+        Route::post('/checkout/coupon', [CheckoutController::class, 'applyCoupon'])->name('coupon.apply');
+        Route::delete('/checkout/coupon', [CheckoutController::class, 'removeCoupon'])->name('coupon.remove');
+        Route::get('/checkout/momo-return', [CheckoutController::class, 'momoReturn'])->name('momo.return');
 
-    Route::post('/books/{bookId}/review', [UserReviewController::class, 'store'])->name('books.review.store');
+        // Đánh giá & Yêu thích sách
+        Route::post('/books/{bookId}/review', [UserReviewController::class, 'store'])->name('books.review.store');
+        Route::get('/wishlist', [UserWishlistController::class, 'index'])->name('wishlist.index');
+        Route::post('/wishlist/toggle/{id}', [UserWishlistController::class, 'toggle'])->name('wishlist.toggle');
+    });
 
-    Route::get('/wishlist', [UserWishlistController::class, 'index'])->name('wishlist.index');
-    Route::post('/wishlist/toggle/{id}', [UserWishlistController::class, 'toggle'])->name('wishlist.toggle');
-    Route::get('/checkout/momo-return', [CheckoutController::class, 'momoReturn'])->name('momo.return');
 
-    // 4. Nhóm Quản trị (Admin)
-    Route::prefix('admin')->group(function () {
+    // 2.2: ADMIN
+    Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
         Route::get('/export-orders', [AdminController::class, 'exportOrders'])->name('admin.export.orders');
 
@@ -85,7 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/{id}', [AdminController::class, 'usersShow'])->name('admin.users.show');
         Route::delete('/users/{id}', [AdminController::class, 'usersDestroy'])->name('admin.users.destroy');
 
-        // Quản lý nhà cung cấp (Đầy đủ chức năng)
+        // Quản lý nhà cung cấp
         Route::get('/suppliers', [AdminController::class, 'suppliersIndex'])->name('admin.suppliers.index');
         Route::get('/suppliers/create', [AdminController::class, 'suppliersCreate'])->name('admin.suppliers.create');
         Route::post('/suppliers/store', [AdminController::class, 'suppliersStore'])->name('admin.suppliers.store');
@@ -94,6 +99,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/suppliers/{id}', [AdminController::class, 'suppliersDestroy'])->name('admin.suppliers.destroy');
         Route::get('/suppliers/{id}/import', [AdminController::class, 'suppliersImport'])->name('admin.suppliers.import');
         Route::post('/suppliers/{id}/import', [AdminController::class, 'suppliersImportStore'])->name('admin.suppliers.import.store');
+
         // Nghiệp vụ Quản lý đánh giá sách
         Route::get('/reviews', [AdminController::class, 'reviewsIndex'])->name('admin.reviews.index');
         Route::post('/reviews/{id}/approve', [AdminController::class, 'reviewsApprove'])->name('admin.reviews.approve');
@@ -104,15 +110,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/reviews/approve-all-pending', [AdminController::class, 'approveAllPending'])->name('admin.reviews.approveAllPending');
         Route::post('/admin/reviews/approve-all-suspicious', [AdminController::class, 'approveAllSuspicious'])->name('admin.reviews.approveAllSuspicious');
 
+        // Quản lý Voucher
         Route::get('/vouchers', [AdminVoucherController::class, 'index'])->name('admin.vouchers.index');
         Route::post('/vouchers', [AdminVoucherController::class, 'store'])->name('admin.vouchers.store');
         Route::put('/vouchers/{id}', [AdminVoucherController::class, 'update'])->name('admin.vouchers.update');
         Route::delete('/vouchers/{id}', [AdminVoucherController::class, 'destroy'])->name('admin.vouchers.destroy');
         Route::post('/vouchers/{id}/toggle-status', [AdminVoucherController::class, 'toggleStatus'])->name('admin.vouchers.toggleStatus');
     });
+
+    // API check Gemini (Độc lập, miễn đăng nhập là gọi được)
     Route::get('/kiem-tra-ai', function () {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                ->get('https://generativelanguage.googleapis.com/v1beta/models?key=' . env('GEMINI_API_KEY'));
-            return $response->json();
-        });
+        $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+            ->get('https://generativelanguage.googleapis.com/v1beta/models?key=' . env('GEMINI_API_KEY'));
+        return $response->json();
+    });
 });

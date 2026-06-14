@@ -348,9 +348,21 @@ class AdminController extends Controller
             'contract_code' => 'required|string|max:255|unique:suppliers,contract_code',
             'contact_name' => 'required|string|max:255',
             'contact_title' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10', 'max:20'],
             'email' => 'required|email|max:255',
             'status' => 'required|in:active,paused',
+        ], [
+            // VIETSUB CÂU LỖI CHO NÓ THÂN THIỆN
+            'name.required' => 'Tên nhà cung cấp không được để trống.',
+            'contract_code.required' => 'Mã hợp đồng không được để trống.',
+            'contract_code.unique' => 'Mã hợp đồng này đã tồn tại trong hệ thống rồi.',
+            'contact_name.required' => 'Không được để trống tên người liên hệ.',
+            'contact_title.required' => 'Chức vụ người liên hệ không được bỏ trống.',
+            'phone.required' => 'Không được để trống số điện thoại.',
+            'phone.regex' => 'Số điện thoại phải bắt đầu từ 0 và đủ 10 số',
+            'phone.min' => 'Số điện thoại phải có ít nhất 10 số.',
+            'email.required' => 'Email không được để trống.',
+            'email.email' => 'Sai định dạng Email, phải có @domain.com.',
         ]);
 
         Supplier::create($request->all());
@@ -372,9 +384,21 @@ class AdminController extends Controller
             'contract_code' => 'required|string|max:255|unique:suppliers,contract_code,' . $id,
             'contact_name' => 'required|string|max:255',
             'contact_title' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^0[0-9]{9}$/'],
             'email' => 'required|email|max:255',
             'status' => 'required|in:active,paused',
+        ], [
+            // VIETSUB TƯƠNG TỰ BÊN STORE
+            'name.required' => 'Tên nhà cung cấp không được để trống.',
+            'contract_code.required' => 'Mã hợp đồng không được để trống.',
+            'contract_code.unique' => 'Mã hợp đồng này đã tồn tại trong hệ thống rồi.',
+            'contact_name.required' => 'Không được để trống tên người liên hệ.',
+            'contact_title.required' => 'Chức vụ người liên hệ không được bỏ trống.',
+            'phone.required' => 'Quên nhập số điện thoại kìa bro.',
+            'phone.regex' => 'Số điện thoại nhìn có vẻ sai sai, chỉ được nhập số (có thể chứa khoảng trắng hoặc dấu + -).',
+            'phone.min' => 'Số điện thoại phải có ít nhất 10 số.',
+            'email.required' => 'Email không được để trống.',
+            'email.email' => 'Định dạng Email sai rồi.',
         ]);
 
         $supplier->update($request->all());

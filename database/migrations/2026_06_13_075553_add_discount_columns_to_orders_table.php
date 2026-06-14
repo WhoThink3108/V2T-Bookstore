@@ -23,7 +23,6 @@ return new class extends Migration
     public function down()
     {
         Schema::table('orders', function (Blueprint $table) {
-            // Rút cột nếu cần quay xe (rollback)
             $table->dropColumn(['discount_code', 'discount_amount']);
         });
     }
