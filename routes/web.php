@@ -125,3 +125,13 @@ Route::middleware('auth')->group(function () {
         return $response->json();
     });
 });
+
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/clear-hacker', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    return 'Đã dọn sạch sẽ rác cấu hình cũ trên Render! Bro test gửi mail đi!';
+});
