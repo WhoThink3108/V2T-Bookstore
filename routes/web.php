@@ -135,3 +135,26 @@ Route::get('/clear-hacker', function () {
     Artisan::call('view:clear');
     return 'Đã dọn sạch sẽ rác cấu hình cũ trên Render! Bro test gửi mail đi!';
 });
+
+// 1. Link kiểm tra xem Render có đang đọc đúng biến môi trường không
+Route::get('/soi-cau-hinh', function () {
+    return response()->json([
+        'KIEU_XEP_HANG_QUEUE' => config('queue.default'),
+        'CACH_GUI_MAIL' => config('mail.default'),
+        'MAY_CHU_MAIL' => config('mail.mailers.smtp.host'),
+        'TAI_KHOAN_MAIL' => config('mail.mailers.smtp.username'),
+        'DO_DAI_MAT_KHAU' => strlen(config('mail.mailers.smtp.password')), // Đếm số ký tự pass để xem có bị rỗng không
+    ]);
+});
+
+// 2. Link lôi file Log (nhật ký lỗi) giấu kín của Laravel ra đọc
+Route::get('/xem-log', function () {
+    $logPath = storage_path('logs/laravel.log');
+    if (file_exists($logPath)) {
+        // Đọc nội dung file log dưới dạng text dễ nhìn
+        return response(file_get_contents($logPath), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8'
+        ]);
+    }
+    return 'Web sạch bong, không có lỗi nào được ghi lại!';
+});
